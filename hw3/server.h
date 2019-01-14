@@ -27,9 +27,9 @@ static const int PACKET_MAX_SIZE = 512;
 static const int DATA_HAEDER_LEN = 4;
 static const int WRQ_HAEDER_LEN = 2;
 static const int ACK_HAEDER_LEN = 4;
-static const int WRQ_HAEDER = 2;
-static const int DATA_HAEDER = 3;
-static const int ACK_HAEDER = 4;
+static const unsigned short WRQ_OPCODE = 2;
+static const unsigned short DATA_OPCODE = 3;
+static const unsigned short ACK_HAEDER = 4;
 static const int OPCODE_LEN = 2;
 static const int BLOCK_NUM_LEN = 2;
 
@@ -47,22 +47,20 @@ struct sockadd_in {
 };
 
 struct ack_fields{
-	char opcode [OPCODE_LEN];
-	char blocknum [BLOCK_NUM_LEN];
-}__attribute__((packed)); ;
+	unsigned short opcode;
+	unsigned short blocknum;
+}__attribute__((packed));
 
 struct wrq_fields{
-	char header [WRQ_HAEDER_LEN+1];
-	char* file_name;
-	char * mode;
-} ;
+	unsigned short opcode;
+	char wrq_data [PACKET_MAX_SIZE];
+}__attribute__((packed));
 
 struct data_fields{
-	//TODO: maybe do +1 to size of all fields here for the /0 of the strings
-	char opcode [OPCODE_LEN+1];
-	char block_num [BLOCK_NUM_LEN+1];
+	unsigned short opcode;
+	unsigned short block_num;
 	char data [PACKET_MAX_SIZE];
-} ;
+}__attribute__((packed));
 
 
 class server
@@ -72,27 +70,23 @@ public:
 	~server();
 	bool run();
 private:
-	bool get_buff_data_wrq(int rcv_size);
+	bool wrq_handler(int rcv_size);
 	bool send_ack();
-	bool get_data(int rcv_size);
-
+	bool data_handler(int rcv_size);
+	void init_vars();
 	int m_sockfd;
 	int m_portnum;
 	int m_errorsnum;
-	int m_acknum;
-	int m_newsockfd;
+	unsigned short m_acknum;
 	int m_client_addr_len;
-	char buff[PACKET_MAX_SIZE+DATA_HAEDER_LEN];
 	FILE* filename;
 	bool m_end_of_data;
 	s_sockadd_in my_addr;
 	s_sockadd_in client_addr;
-	bool new_socket_is_open;
 	struct timeval tv;
 	s_wrq_fields m_wrq_fields;
 	s_ack_fields m_ack_fields;
 	s_data_fields m_data_fields;
-
 };
 
 
